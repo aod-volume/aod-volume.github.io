@@ -4,10 +4,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOD Volume - 常亮音量条</title>
+    <meta name="description" content="AOD Volume 是一个常亮音量条应用，在当前屏幕上持续显示媒体音量，支持线性与圆形样式、彩虹配色、贴边吸附与阈值显示。">
 
     <link rel="shortcut icon" href="./favicon.ico" type="image/ico">
 
     <script src="https://unpkg.com/sober@0.6.7/dist/sober.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --card: #ffffff;
+            --text: #17181a;
+            --text-sub: #5f6368;
+            --border: #e3e5e9;
+            --accent: #2f6bff;
+            --accent-solid: #2f6bff;
+            --accent-weak: rgba(47, 107, 255, .1);
+            --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+            --rainbow: linear-gradient(90deg, #ff4d4d, #ffb04d, #ffe14d, #4dff88, #4dd2ff, #8a4dff, #ff4dd2);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #101114;
+                --card: #191a1e;
+                --text: #eceef1;
+                --text-sub: #9ea3ab;
+                --border: #2a2c32;
+                --accent: #7ba2ff;
+                --accent-solid: #2f6bff;
+                --accent-weak: rgba(123, 162, 255, .14);
+                --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .main {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 32px 20px 64px;
+        }
+
+        h2.section-title {
+            font-size: 22px;
+            margin: 56px 0 6px;
+        }
+
+        p.section-sub {
+            color: var(--text-sub);
+            margin: 0 0 22px;
+            font-size: 15px;
+        }
+
+        /* ---------- Hero ---------- */
+        .hero {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            padding: 34px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-icon {
+            width: 104px;
+            height: 104px;
+            border-radius: 24px;
+            flex: none;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .16);
+        }
+
+        .hero-body {
+            flex: 1 1 320px;
+            min-width: 280px;
+        }
+
+        .hero-body h1 {
+            font-size: 30px;
+            margin: 0 0 6px;
+            letter-spacing: -.4px;
+        }
+
+        .tagline {
+            color: var(--text-sub);
+            font-size: 15px;
+            margin: 0 0 14px;
+        }
+
+        .hero-desc {
+            margin: 0 0 20px;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: transform .15s ease, opacity .15s ease;
+        }
+
+        .btn:active {
+            transform: scale(.98);
+        }
+
+        .btn-primary {
+            background: var(--accent-solid);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 20px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .chips li {
+            font-size: 12.5px;
+            color: var(--text-sub);
+            background: var(--accent-weak);
+            border-radius: 999px;
+            padding: 5px 12px;
+        }
+
+        /* ---------- Preview ---------- */
+        .previews {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .preview {
+            padding: 22px;
+            text-align: center;
+        }
+
+        .preview h3 {
+            font-size: 15px;
+            margin: 0 0 4px;
+        }
+
+        .preview p {
+            color: var(--text-sub);
+            font-size: 13px;
+            margin: 0 0 20px;
+        }
+
+        .stage {
+            height: 132px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: repeating-conic-gradient(rgba(127, 127, 127, .12) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+        }
+
+        .linear-bar {
+            width: 78%;
+            height: 22px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            padding: 3px;
+            background: rgba(127, 127, 127, .12);
+        }
+
+        .linear-bar span {
+            display: block;
+            height: 100%;
+            width: 68%;
+            border-radius: 999px;
+            background: var(--rainbow);
+            background-size: 200% 100%;
+            animation: shift 6s linear infinite;
+        }
+
+        .ring-track {
+            fill: none;
+            stroke: rgba(127, 127, 127, .18);
+            stroke-width: 10;
+        }
+
+        .ring-value {
+            fill: none;
+            stroke: url(#rainbow);
+            stroke-width: 10;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        @keyframes shift {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 200% 0;
+            }
+        }
+
+        /* ---------- Features ---------- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .feature {
+            padding: 20px;
+        }
+
+        .feature svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .feature h3 {
+            font-size: 15px;
+            margin: 0 0 6px;
+        }
+
+        .feature p {
+            color: var(--text-sub);
+            font-size: 13.5px;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        /* ---------- Steps / Permissions ---------- */
+        .split {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .panel {
+            padding: 24px;
+        }
+
+        .panel h3 {
+            margin: 0 0 14px;
+            font-size: 16px;
+        }
+
+        ol.steps {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-sub);
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        ol.steps strong {
+            color: var(--text);
+        }
+
+        ul.perms {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 14px;
+        }
+
+        ul.perms li {
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+            line-height: 1.6;
+        }
+
+        ul.perms li:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        ul.perms b {
+            display: block;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12.5px;
+        }
+
+        ul.perms span {
+            color: var(--text-sub);
+            font-size: 13.5px;
+        }
+
+        /* ---------- Footer ---------- */
+        footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-sub);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        footer a {
+            color: var(--text-sub);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+    </style>
 </head>
 
 <body style="height: 100%; padding: 0px; margin: 0px;">
@@ -17,7 +365,7 @@
             <img src="./app-icon.png" slot="navigation" style="width: 40px; height: 40px;">
             <!--标题-->
             <div slot="headline"> AOD Volume </div>
-            
+
             <s-popup-menu slot="action">
                 <s-icon-button slot="trigger">
                     <s-icon>
@@ -26,12 +374,230 @@
                         </svg>
                     </s-icon>
                 </s-icon-button>
-                <s-popup-menu-item onclick="window.open('privacy-en.html')">Pravicy</s-popup-menu-item>
+                <s-popup-menu-item onclick="window.open('privacy-en.html')">Privacy</s-popup-menu-item>
                 <s-popup-menu-item onclick="window.open('privacy-zh.html')">隐私政策</s-popup-menu-item>
             </s-popup-menu>
         </s-appbar>
+
+        <main class="main">
+
+            <!-- Hero -->
+            <section class="hero">
+                <img class="hero-icon" src="./app-icon.png" alt="AOD Volume 应用图标">
+                <div class="hero-body">
+                    <h1>AOD Volume</h1>
+                    <p class="tagline">常亮音量条 · Always-on display volume bar</p>
+                    <p class="hero-desc">
+                        把当前媒体音量常驻显示在屏幕上，随时知道音量有多大，避免追剧、游戏或看视频时声音突然过大（或过小）的尴尬。
+                        音量条悬浮在其他应用之上，线性、圆形两种样式任选，颜色、透明度、尺寸、边框都能自己调。
+                    </p>
+                    <div class="actions">
+                        <a class="btn btn-primary"
+                            href="https://play.google.com/store/apps/details?id=com.github.boybeak.aodvolumebar"
+                            target="_blank" rel="noopener">前往 Google Play 下载</a>
+                        <a class="btn btn-ghost" href="https://github.com/boybeak/AODVolumeBar" target="_blank"
+                            rel="noopener">查看源码</a>
+                    </div>
+                    <ul class="chips">
+                        <li>支持 Android 7.0 及以上</li>
+                        <li>13 种语言</li>
+                        <li>开源免费</li>
+                        <li>不收集任何数据</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Preview -->
+            <h2 class="section-title">两种样式</h2>
+            <p class="section-sub">线性贴边显示，或者圆形环绕显示，随你喜欢。</p>
+            <section class="previews">
+                <div class="card preview">
+                    <h3>线性音量条</h3>
+                    <p>适合贴屏幕边缘，横竖皆可</p>
+                    <div class="stage">
+                        <div class="linear-bar"><span></span></div>
+                    </div>
+                </div>
+                <div class="card preview">
+                    <h3>圆形音量条</h3>
+                    <p>环形进度，视觉更集中</p>
+                    <div class="stage">
+                        <svg viewBox="0 0 120 120" width="112" height="112">
+                            <defs>
+                                <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#ff4d4d" />
+                                    <stop offset="25%" stop-color="#ffe14d" />
+                                    <stop offset="50%" stop-color="#4dff88" />
+                                    <stop offset="75%" stop-color="#4dd2ff" />
+                                    <stop offset="100%" stop-color="#8a4dff" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-track" cx="60" cy="60" r="46" />
+                            <circle class="ring-value" cx="60" cy="60" r="46" stroke-dasharray="289"
+                                stroke-dashoffset="92" />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <h2 class="section-title">功能特性</h2>
+            <p class="section-sub">一个小工具，能调的地方都给你留了开关。</p>
+            <section class="features">
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="3" y="5" width="14" height="14" rx="3" />
+                        <rect x="9" y="9" width="12" height="10" rx="3" />
+                    </svg>
+                    <h3>悬浮常亮</h3>
+                    <p>音量条绘制在其他应用之上，桌面、视频、游戏里都能看到，切换应用也不会消失。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="2" y="4" width="20" height="16" rx="3" />
+                        <rect x="2" y="9" width="5" height="6" rx="1.5" fill="currentColor" stroke="none" />
+                        <path d="M11 8v8M15 8v8" stroke-linecap="round" />
+                    </svg>
+                    <h3>贴边吸附</h3>
+                    <p>拖动后自动吸附到屏幕边缘，吸附间距可调，不会挡住正文内容。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="3" y="4" width="18" height="6" rx="3" />
+                        <circle cx="12" cy="16" r="5" />
+                    </svg>
+                    <h3>线性与圆形</h3>
+                    <p>两种基础样式，尺寸、长短都能调整，横屏竖屏都适用。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="8.5" cy="12" r="6" fill="currentColor" stroke="none" opacity=".35" />
+                        <circle cx="12" cy="12" r="6" fill="currentColor" stroke="none" opacity=".5" />
+                        <circle cx="15.5" cy="12" r="6" fill="currentColor" stroke="none" opacity=".8" />
+                    </svg>
+                    <h3>颜色与彩虹</h3>
+                    <p>前景、背景、边框颜色随便挑，也可以直接开启彩虹渐变效果。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="3" y="5" width="18" height="14" rx="3" />
+                        <path d="M8 9h8v6H8z" fill="currentColor" stroke="none" opacity=".3" />
+                    </svg>
+                    <h3>透明度与边框</h3>
+                    <p>调整整体透明度，让它若隐若现；边框宽度可调，视觉上更清爽。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M4 12h16" stroke-linecap="round" />
+                        <circle cx="9" cy="12" r="3" fill="currentColor" stroke="none" />
+                    </svg>
+                    <h3>阈值才显示</h3>
+                    <p>只在音量大于等于设定值时出现，安静时屏幕保持干净。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="3" y="3" width="8" height="8" rx="2" />
+                        <rect x="13" y="3" width="8" height="8" rx="2" />
+                        <rect x="3" y="13" width="8" height="8" rx="2" />
+                        <circle cx="17" cy="17" r="4" />
+                    </svg>
+                    <h3>快捷设置磁贴</h3>
+                    <p>把开关放进下拉快捷面板，一键显示或隐藏音量条。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 3l7 4v5c0 4.2-2.8 7.6-7 9-4.2-1.4-7-4.8-7-9V7z" />
+                        <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <h3>保活与开机自启</h3>
+                    <p>可选前台服务防止被系统清理，也能设置开机后自动显示。</p>
+                </div>
+                <div class="card feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"
+                            stroke-linecap="round" />
+                    </svg>
+                    <h3>多语言</h3>
+                    <p>内置简体中文、繁體中文、English、日本語、한국어、Deutsch、Español、Français 等 13 种语言。</p>
+                </div>
+            </section>
+
+            <!-- Usage & permissions -->
+            <h2 class="section-title">使用步骤</h2>
+            <p class="section-sub">三步就能用上，权限只用一次。</p>
+            <section class="split">
+                <div class="card panel">
+                    <h3>快速开始</h3>
+                    <ol class="steps">
+                        <li>从 Google Play 安装 <strong>AOD Volume</strong> 并打开。</li>
+                        <li>授予<strong>显示在其他应用上层</strong>权限，这是把音量条画到桌面和其他应用之上的必要条件。</li>
+                        <li>打开主开关，拖动音量条到顺手的位置；按需开启贴边吸附、阈值显示、开机自启。</li>
+                    </ol>
+                </div>
+                <div class="card panel">
+                    <h3>用到的权限</h3>
+                    <ul class="perms">
+                        <li>
+                            <b>SYSTEM_ALERT_WINDOW</b>
+                            <span>悬浮窗权限，用于在其他应用上层显示音量条。</span>
+                        </li>
+                        <li>
+                            <b>FOREGROUND_SERVICE</b>
+                            <span>前台服务，开启保活时才使用，避免音量条被系统回收。</span>
+                        </li>
+                        <li>
+                            <b>RECEIVE_BOOT_COMPLETED</b>
+                            <span>开机广播，用于实现开机后自动显示。</span>
+                        </li>
+                        <li>
+                            <b>POST_NOTIFICATIONS</b>
+                            <span>通知权限，用于保活通知与快捷显示按钮。</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Privacy -->
+            <h2 class="section-title">隐私</h2>
+            <p class="section-sub">应用不采集、不存储、不传输任何个人信息。</p>
+            <section class="split">
+                <div class="card panel">
+                    <h3>零数据收集</h3>
+                    <p style="color: var(--text-sub); font-size: 14px; line-height: 1.7; margin: 0;">
+                        所有设置只保存在你的设备本地，不需要注册账号，也没有广告和分析 SDK。
+                        完整的说明见隐私政策（英文 / 中文）。
+                    </p>
+                    <div class="actions" style="margin-top: 16px;">
+                        <a class="btn btn-ghost" href="./privacy-en.html">Privacy Policy (EN)</a>
+                        <a class="btn btn-ghost" href="./privacy-zh.html">隐私政策（中文）</a>
+                    </div>
+                </div>
+                <div class="card panel">
+                    <h3>开源</h3>
+                    <p style="color: var(--text-sub); font-size: 14px; line-height: 1.7; margin: 0;">
+                        项目代码托管在 GitHub，使用 Coil、Compose Color Picker 等开源库，欢迎提交 issue 与建议。
+                    </p>
+                    <div class="actions" style="margin-top: 16px;">
+                        <a class="btn btn-ghost" href="https://github.com/boybeak/AODVolumeBar" target="_blank"
+                            rel="noopener">github.com/boybeak/AODVolumeBar</a>
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                <span>由 Beak 开发 · © 2024-2026 AOD Volume</span>
+                <span class="footer-links">
+                    <a href="mailto:boybeak@gmail.com">boybeak@gmail.com</a>
+                    <a href="https://github.com/boybeak" target="_blank" rel="noopener">GitHub</a>
+                    <a href="./privacy-en.html">Privacy</a>
+                    <a href="./privacy-zh.html">隐私政策</a>
+                </span>
+            </footer>
+
+        </main>
     </s-page>
-    
+
 </body>
 
 </html>
